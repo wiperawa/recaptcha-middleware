@@ -81,11 +81,12 @@ abstract class AbstractRecaptchaMiddleware implements MiddlewareInterface {
 
     protected function verifyToken(string $token): Response{
 
-        $remote_ip = $_SERVER['REMOTE_ADDR'];
+        $remote_ip = $_SERVER['REMOTE_ADDR']??'127.0.0.1';
 
+        //var_dump($token); die();
         $resp = $this->googleRecaptcha
             ->setExpectedAction($this->expectedAction)
-            ->setScoreThreshold(0.5)
+            //->setScoreThreshold(0.5)
             ->verify($token, $remote_ip);
 
         return $resp;

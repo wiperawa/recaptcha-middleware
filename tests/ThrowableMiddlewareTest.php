@@ -18,20 +18,21 @@ class ThrowableMiddlewareTest extends TestCase {
 
 
     public function testThrovableMiddleware(){
-        $googleRecaptcha = new ReCaptcha('secret', $this->createMockGoogleResponse(['success' => true]));
+        $googleRecaptcha = new ReCaptcha('secret', $this->createMockGoogleResponse('{"success": true}'));
+
         $mw = new RecaptchaMiddlewareThrowable(
             new Psr17Factory(),
             $this->createRequest(),
             'secret'
         );
+        $mw->setGoogleRecaptcha($googleRecaptcha);
 
-        $res = $mw->process($this->createRequest(),$this->getRequestHandler($this->createResponse(['est'=>'test'])));
+        $res = $mw->process($this->createRequest(),$this->getRequestHandler($this->createResponse('{"success": true}')));
 
-        var_dump($res);die();
-
+        $this->assertEquals(200, $res->getStatusCode());
     }
 
-    private function createMockGoogleResponse(array $responseJson){
+    private function createMockGoogleResponse($responseJson){
         $method = $this->getMockBuilder(\ReCaptcha\RequestMethod::class)
             ->disableOriginalConstructor()
             ->setMethods(array('submit'))
@@ -67,6 +68,8 @@ class ThrowableMiddlewareTest extends TestCase {
     }
 
     private function createRequest(): ServerRequest {
-        return new ServerRequest('POST', '/register',[],'g-recaptcha-token=token');
+
+        return (new ServerRequest('POST', '/register'))->withParsedBody(['g-recaptcha-response' => 'ttest']);
+
     }
 }
