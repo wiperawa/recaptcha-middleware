@@ -1,8 +1,7 @@
 <?php
-declare(strict_type=1);
+declare(strict_types=1);
 namespace Wiperawa\Middleware\RecaptchaMiddleware;
 
-use http\Exception\InvalidArgumentException;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -34,12 +33,12 @@ abstract class AbstractRecaptchaMiddleware implements MiddlewareInterface {
                                 string $expectedAction = '')
     {
         if ($secret === '') {
-            throw new InvalidArgumentException('Secret Dont Provided');
+            throw new \InvalidArgumentException('Secret Dont Provided');
         }
 
         $this->secret = $secret;
         $this->request = $request;
-        $this->googleRecaptcha = new ReCaptcha($this->secret);
+        $this->setGoogleRecaptcha(new ReCaptcha($this->secret));
         $this->postParameterName = $postParameterName;
         $this->expectedAction = $expectedAction;
         $this->responseFactory = $responseFactory;
@@ -90,5 +89,9 @@ abstract class AbstractRecaptchaMiddleware implements MiddlewareInterface {
             ->verify($token, $remote_ip);
 
         return $resp;
+    }
+
+    public function setGoogleRecaptcha(ReCaptcha $captcha): void {
+        $this->googleRecaptcha = $captcha;
     }
 }
