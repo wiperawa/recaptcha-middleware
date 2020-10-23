@@ -1,0 +1,44 @@
+{
+    "name": "wiperawa/recaptcha-middleware",
+    "type": "library",
+    "description": "invisible reCAPTCHA v3 server-side token check middleware",
+    "keywords": [
+        "recaptcha",
+        "middleware",
+        "check"
+    ],
+    "homepage": "https://github.com/wiperawa/recaptcha-middleware",
+    "license": "MIT-License",
+    "support": {
+        "issues": "https://github.com/wiperawa/recaptcha-middleware/issues?state=open",
+        "source": "https://github.com/wiperawa/recaptcha-middleware"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": "^7.4",
+        "google/recaptcha": "^1.2",
+        "psr/http-message": "^1.0",
+        "psr/http-server-middleware": "^1.0",
+        "yiisoft/http": "^1.0"
+    },
+    "require-dev": {
+        "infection/infection": "^0.16.3",
+        "vimeo/psalm": "^3.15",
+        "phpunit/phpunit": "^9.3",
+        "nyholm/psr7": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wiperawa\\Middleware\\RecaptchaMiddleware\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Wiperawa\\Middleware\\RecaptchaMiddleware\\Tests\\": "tests"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
