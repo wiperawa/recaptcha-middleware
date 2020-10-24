@@ -1,56 +1,69 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Wiperawa\Middleware\RecaptchaMiddleware;
 
 use Psr\Http\Message\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReCaptcha\ReCaptcha;
 use ReCaptcha\Response;
+use Yiisoft\Http\Status;
 
-abstract class AbstractRecaptchaMiddleware implements MiddlewareInterface {
+class AbstractRecaptchaMiddleware implements MiddlewareInterface
+{
+    public const DEFAULT_POST_FIELD = 'g-recaptcha-response';
 
-    protected ResponseFactoryInterface $responseFactory;
-
-    private ServerRequestInterface $request;
-
-    private ReCaptcha $googleRecaptcha ;
-
-    private string $secret ;
-
-    private string $postParameterName ;
+    private string $postParameterName;
 
     private ?string $expectedAction = '';
-
     protected array $errors = [];
-
     protected bool $success;
 
-    public function __construct(ResponseFactoryInterface $responseFactory,
-                                ServerRequestInterface $request,
-                                string $secret,
-                                string $postParameterName = 'g-recaptcha-response',
-                                string $expectedAction = '')
-    {
-        if ($secret === '') {
-            throw new \InvalidArgumentException('Secret Dont Provided');
-        }
+    protected ResponseFactoryInterface $responseFactory;
+    private ReCaptcha $googleRecaptcha;
 
-        $this->secret = $secret;
-        $this->request = $request;
-        $this->setGoogleRecaptcha(new ReCaptcha($this->secret));
+    public function __construct(
+        ResponseFactoryInterface $responseFactory,
+        ReCaptcha $recaptcha,
+        string $postParameterName = self::DEFAULT_POST_FIELD,
+        string $expectedAction = ''
+    ) {
+        $this->responseFactory = $responseFactory;
+        $this->googleRecaptcha = $recaptcha;
+
         $this->postParameterName = $postParameterName;
         $this->expectedAction = $expectedAction;
-        $this->responseFactory = $responseFactory;
     }
 
-    public function withSecret(string $secret): self
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        $result = $this->verifyToken($request);
+        if ($result->isSuccess()) {
+            // SUCCESS ACTION
+            return $handler->handle($request->withAttribute(static::class, $result));
+        } else {
+            // FAIL ACTION
+            return $this->responseFactory->createResponse(Status::BAD_REQUEST, implode(',', $result->getErrorCodes()));
+        }
+    }
+
+    /**
+     * @psalm-mutation-free
+     */
+    public function withRecaptcha(ReCaptcha $recaptcha): self
     {
         $new = clone $this;
-        $new->secret = $secret;
+        $new->googleRecaptcha = $recaptcha;
         return $new;
     }
 
+    /**
+     * @psalm-mutation-free
+     */
     public function withPostParameterName(string $postParameterName): self
     {
         $new = clone $this;
@@ -58,6 +71,9 @@ abstract class AbstractRecaptchaMiddleware implements MiddlewareInterface {
         return $new;
     }
 
+    /**
+     * @psalm-mutation-free
+     */
     public function withExpectedAction(string $expectedAction): self
     {
         $new = clone $this;
@@ -65,34 +81,18 @@ abstract class AbstractRecaptchaMiddleware implements MiddlewareInterface {
         return $new;
     }
 
-    public function isSuccess():bool {
-        return $this->success;
-    }
+    protected function verifyToken(ServerRequestInterface $request): Response
+    {
+        $token = $this->getToken($request);
+        $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? null;
 
-    public function getErrors():array {
-        return $this->errors;
-    }
-
-    protected function getToken(): ?string{
-        $body = $this->request->getParsedBody();
-
-        return $body[$this->postParameterName]??null;
-    }
-
-    protected function verifyToken(string $token): Response{
-
-        $remote_ip = $_SERVER['REMOTE_ADDR']??'127.0.0.1';
-
-        //var_dump($token); die();
-        $resp = $this->googleRecaptcha
+        return $this->googleRecaptcha
             ->setExpectedAction($this->expectedAction)
-            //->setScoreThreshold(0.5)
-            ->verify($token, $remote_ip);
-
-        return $resp;
+            ->verify($token, $remoteIp);
     }
 
-    public function setGoogleRecaptcha(ReCaptcha $captcha): void {
-        $this->googleRecaptcha = $captcha;
+    private function getToken(ServerRequestInterface $request): string
+    {
+        return $request->getParsedBody()[$this->postParameterName] ?? '';
     }
 }
