@@ -20,12 +20,11 @@ class ThrowableMiddlewareTest extends TestCase {
     public function testThrovableMiddleware(){
         $googleRecaptcha = new ReCaptcha('secret', $this->createMockGoogleResponse('{"success": true}'));
 
-        $mw = new RecaptchaMiddlewareThrowable(
+        $mw = (new RecaptchaMiddlewareThrowable(
             new Psr17Factory(),
             $this->createRequest(),
             'secret'
-        );
-        $mw->setGoogleRecaptcha($googleRecaptcha);
+        ))->withRecaptcha($googleRecaptcha);
 
         $res = $mw->process($this->createRequest(),$this->getRequestHandler($this->createResponse('{"success": true}')));
 
