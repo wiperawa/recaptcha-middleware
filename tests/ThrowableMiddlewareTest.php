@@ -11,7 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use ReCaptcha\ReCaptcha;
 use ReCaptcha\Response;
-use Wiperawa\Middleware\RecaptchaMiddleware\RecaptchaMiddlewareThrowable;
+use Wiperawa\Middleware\RecaptchaMiddleware;
 use Yiisoft\DataResponse\DataResponseFactory;
 
 class ThrowableMiddlewareTest extends TestCase {
@@ -20,7 +20,7 @@ class ThrowableMiddlewareTest extends TestCase {
     public function testThrovableMiddleware(){
         $googleRecaptcha = new ReCaptcha('secret', $this->createMockGoogleResponse('{"success": true}'));
 
-        $mw = (new RecaptchaMiddlewareThrowable(
+        $mw = (new RecaptchaMiddleware(
             new Psr17Factory(),
             $this->createRequest(),
             'secret'

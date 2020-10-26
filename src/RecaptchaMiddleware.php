@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Wiperawa\Middleware\RecaptchaMiddleware;
+namespace Wiperawa\Middleware;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -13,7 +13,7 @@ use ReCaptcha\ReCaptcha;
 use ReCaptcha\Response;
 use Yiisoft\Http\Status;
 
-class AbstractRecaptchaMiddleware implements MiddlewareInterface
+class RecaptchaMiddleware implements MiddlewareInterface
 {
     public const DEFAULT_POST_FIELD = 'g-recaptcha-response';
 
