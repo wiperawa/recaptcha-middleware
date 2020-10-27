@@ -20,11 +20,11 @@ class RecaptchaMiddleware implements MiddlewareInterface
     private string $postParameterName;
 
     private ?string $expectedAction = '';
-    protected array $errors = [];
-    protected bool $success;
 
-    protected ResponseFactoryInterface $responseFactory;
+    private ResponseFactoryInterface $responseFactory;
     private ReCaptcha $googleRecaptcha;
+
+    private $continueIfFails = false;
 
     public function __construct(
         ResponseFactoryInterface $responseFactory,
@@ -42,12 +42,14 @@ class RecaptchaMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $result = $this->verifyToken($request);
-        if ($result->isSuccess()) {
-            // SUCCESS ACTION
+        if ($result->isSuccess() || $this->continueIfFails) {
+
             return $handler->handle($request->withAttribute(static::class, $result));
         } else {
-            // FAIL ACTION
-            return $this->responseFactory->createResponse(Status::BAD_REQUEST, implode(',', $result->getErrorCodes()));
+            return $this->responseFactory->createResponse(
+                Status::BAD_REQUEST,
+                implode(',', $result->getErrorCodes())
+            );
         }
     }
 
@@ -81,7 +83,21 @@ class RecaptchaMiddleware implements MiddlewareInterface
         return $new;
     }
 
-    protected function verifyToken(ServerRequestInterface $request): Response
+    /**
+     * @psalm-mutation-free
+     */
+    public function withContinueIfFails(bool $continueIFFails): self
+    {
+        $new = clone $this;
+        $new->continueIfFails = $continueIFFails;
+        return $new;
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return Response
+     */
+    private function verifyToken(ServerRequestInterface $request): Response
     {
         $token = $this->getToken($request);
         $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? null;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Wiperawa\Middleware\RecaptchaMiddleware\Tests;
+namespace Wiperawa\Middleware\Tests;
 
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
@@ -18,15 +18,20 @@ class ThrowableMiddlewareTest extends TestCase {
 
 
     public function testThrovableMiddleware(){
-        $googleRecaptcha = new ReCaptcha('secret', $this->createMockGoogleResponse('{"success": true}'));
+        $googleRecaptcha = new ReCaptcha(
+            'secret',
+            $this->createMockGoogleResponse('{"success": true}')
+        );
 
         $mw = (new RecaptchaMiddleware(
             new Psr17Factory(),
-            $this->createRequest(),
-            'secret'
+            $googleRecaptcha
         ))->withRecaptcha($googleRecaptcha);
 
-        $res = $mw->process($this->createRequest(),$this->getRequestHandler($this->createResponse('{"success": true}')));
+        $requestHandler = $this->getRequestHandler($this->createResponse('{"success": true}'));
+        $request = $this->createRequest();
+
+        $res = $mw->process($request, $requestHandler);
 
         $this->assertEquals(200, $res->getStatusCode());
     }

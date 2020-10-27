@@ -31,12 +31,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Wiperawa\\Middleware\\RecaptchaMiddleware\\": "src"
+            "Wiperawa\\Middleware\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Wiperawa\\Middleware\\RecaptchaMiddleware\\Tests\\": "tests"
+            "Wiperawa\\Middleware\\Tests\\": "tests"
         }
     },
     "config": {
